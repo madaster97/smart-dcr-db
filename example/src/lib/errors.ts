@@ -1,0 +1,1 @@
+export type HandleError = (e: any) => void;

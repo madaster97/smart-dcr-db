@@ -1,4 +1,4 @@
-import { getDB } from './database';
+import { ClientData, getDB } from './database';
 
 function getPrimaryKey(client_id: string, iss: string): [string, string] {
     return [client_id, iss]
@@ -8,9 +8,8 @@ function parsePrimaryKey([client_id, iss]: string[]) {
     return { client_id, iss }
 }
 
-// Promise <void>
 export async function addClient
-    (client_id: string, iss: string) {
+    (client_id: string, iss: string): Promise<{client_id: string, iss: string}> {
     const db = await getDB();
     return db.add('clients', {
         client_id,
@@ -19,22 +18,24 @@ export async function addClient
     }).then(parsePrimaryKey);
 }
 
-// Promise <ClientData>
 export async function getClient
-    (client_id: string, iss: string) {
+    (client_id: string, iss: string): Promise<ClientData | unknown> {
     const db = await getDB();
     return db.get('clients', getPrimaryKey(client_id, iss))
 }
 
-// Promise<void>
+export async function getAllClients(): Promise<ClientData[]> {
+    const db = await getDB();
+    return db.getAll('clients');
+}
+
 export async function deleteClient
-    (client_id: string, iss: string) {
+    (client_id: string, iss: string): Promise<void> {
     const db = await getDB();
     return db.delete('clients', getPrimaryKey(client_id, iss));
 }
 
-// Promise<string[]>
-export async function getAllIss() {
+export async function getAllIss(): Promise<string[]> {
     const db = await getDB();
     // TODO
     return ['test-iss']
@@ -43,14 +44,12 @@ export async function getAllIss() {
     // // return db.transaction('clients','readonly').store.index('by-iss')
 }
 
-// Promise<ClientData[]>
-export async function getClientsForIss(iss: string) {
+export async function getClientsForIss(iss: string): Promise<ClientData[]> {
     const db = await getDB();
     return db.getAllFromIndex('clients', 'by-iss', iss)
 }
 
-// Promise<void>
-export async function deleteClientsForIss(iss: string) {
+export async function deleteClientsForIss(iss: string): Promise<void> {
     const db = await getDB();
     const tx = db.transaction('clients', 'readwrite');
     const cursor = await tx.store.index('by-iss')
